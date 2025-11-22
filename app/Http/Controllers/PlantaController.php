@@ -12,7 +12,9 @@ class PlantaController
      */
     public function index()
     {
-        return Planta::all();
+
+        $plantas = Planta::with('solo')->get();
+        return response()->json($plantas);    
     }
 
     /**
@@ -23,13 +25,23 @@ class PlantaController
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+    public function storePlanta(Request $request)
     {
-        //
-    }
+        $validated = $request->validate([
+            'nome_planta' => 'required|string|max:45',
+            'sensor_key' => 'required|string|unique:plantas,sensor_key', 
+            'solo_id' => 'required|integer|exists:solos,id',
+            'umidade' => 'nullable|integer|min:0|max:100',
+        ]);  
+        
+        $planta = Planta::create($validated);
+        
+        return response()->json([
+            'message' => 'Planta/Sensor cadastrado com sucesso.',
+            'planta' => $planta], 201);  
+    }        
+
 
     /**
      * Display the specified resource.
@@ -50,16 +62,33 @@ class PlantaController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function updatePlanta(Request $request, string $id)
     {
-        //
+        abort_if($planta->user_id !== auth()->id(), 403, 'Acesso não autorizado a esta planta.');
+
+        $validated = $request->validate([
+            'nome_planta' => 'sometimes|string|max:45',
+            'sensor_key' => 'sometimes|string|unique:plantas,sensor_key,' . $planta->id, 
+            'solo_id' => 'sometimes|integer|exists:solos,id',
+        ]);
+        
+        $planta->update($validated);
+        
+        return response()->json([
+            'message' => 'Planta atualizada com sucesso.',
+            'planta' => $planta
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroyPlanta(string $id)
     {
-        //
+        abort_if($planta->user_id !== auth()->id(), 403, 'Acesso não autorizado a esta planta.');
+
+        $planta->delete();
+
+        return response()->json(null, 204);
     }
 }

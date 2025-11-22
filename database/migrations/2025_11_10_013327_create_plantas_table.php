@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('plantas', function (Blueprint $table) {
             $table->id();
+            $table->string('sensor_key', 255)->unique();
             $table->string('nome_planta', 255)->nullable();
             $table->integer('umidade')->nullable();
-            $table->foreignId('solos_id')->constrained('solos')->onDelete('restrict');
+            $table->foreignId('solo_id')->constrained('solos')->onDelete('restrict');
+            // $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->after('id');
+            $table->timestamps();
         });
     }
 
