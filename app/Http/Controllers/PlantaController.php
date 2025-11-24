@@ -94,7 +94,7 @@ class PlantaController
     /**
      * Update the specified resource in storage.
      */
-    public function updatePlanta(Request $request, string $id)
+    public function updatePlanta(Request $request, Planta $planta)
     {
         abort_if($planta->user_id !== auth()->id(), 403, 'Acesso não autorizado a esta planta.');
 
