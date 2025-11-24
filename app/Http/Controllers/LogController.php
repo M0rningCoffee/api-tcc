@@ -12,7 +12,7 @@ class LogController
      */
     public function index()
     {
-        return Log::all();
+        return response()->json(Log::all());
     }
 
     /**

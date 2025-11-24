@@ -12,7 +12,7 @@ class SoloController
      */
     public function index()
     {
-        return Solo::all();
+        return response()->json(Solo::all());
     }
 
     /**
@@ -28,15 +28,21 @@ class SoloController
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'tipo' => 'required|string|unique:solos,tipo|max:45',
+        ]);
+
+        $solo = Solo::create($validated);
+
+        return response()->json($solo, 201);    
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Solo $solo)
     {
-        //
+        return response()->json($solo);    
     }
 
     /**
@@ -50,16 +56,29 @@ class SoloController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Solo $solo)
     {
-        //
-    }
+        $validated = $request->validate([
+            'tipo' => 'required|string|unique:solos,tipo,' . $solo->id . '|max:45',
+        ]);
+
+        $solo->update($validated);
+
+        return response()->json($solo);    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Solo $solo)
     {
-        //
+        try {
+            $solo->delete();
+            return response()->json(null, 204);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'Não é possível deletar. Existem plantas vinculadas a este tipo de solo.'
+            ], 409);
+        }  
+    
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController
 {
@@ -12,7 +13,7 @@ class UserController
      */
     public function index()
     {
-        return User::all();
+        return response()->json(User::all());
     }
 
     /**
@@ -23,26 +24,57 @@ class UserController
         //
     }
 
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+            'senha' => 'required|string', 
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->senha, $user->senha)) {
+            
+            throw ValidationException::withMessages([
+                'email' => ['Credenciais fornecidas estão incorretas.'],
+            ]);
+        }
+        
+        return response()->json([
+            'message' => 'Login bem-sucedido.',
+            'user' => $user->only(['id', 'nome', 'email'])
+        ]);
+    }
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function storeUser(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'email' => 'required|string|unique:users,email|max:255',
+            'nome' => 'required|string|max:255',
+            'senha' => 'required|string|min:5|max:255'
+
+        ]);
+        $validated['senha'] = Hash::make($validated['senha']);
+
+        $user = User::create($validated);
+
+        return response()->json($user->only(['id', 'nome', 'email']), 201);        
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(user $user)
+    public function show(User $user)
     {
-        //
+        return response()->json($user);        
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(user $user)
+    public function edit(User $user)
     {
         //
     }

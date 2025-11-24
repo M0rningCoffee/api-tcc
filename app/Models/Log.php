@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Log extends Model
 {
     protected $fillable = [
-        'id_planta', 'estado', '_data',
+        'plantas_id', 'estado',
     ];
 }
