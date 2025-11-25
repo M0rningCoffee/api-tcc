@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
 
 class UserController
 {
@@ -13,16 +15,21 @@ class UserController
      */
     public function index()
     {
-        return response()->json(User::all());
+        return response()->json(
+        User::select('id', 'nome', 'email')->get()
+        );
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function logout(Request $request)
     {
-        //
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json(['message' => 'Logout realizado com sucesso.']);
     }
+
 
     public function login(Request $request)
     {
@@ -39,10 +46,13 @@ class UserController
                 'email' => ['Credenciais fornecidas estão incorretas.'],
             ]);
         }
+
+        $token = $user->createToken('app_token')->plainTextToken;
         
         return response()->json([
             'message' => 'Login bem-sucedido.',
-            'user' => $user->only(['id', 'nome', 'email'])
+            'user' => $user->only(['id', 'nome', 'email']),
+            'token' => $token,
         ]);
     }
     /**
@@ -59,8 +69,10 @@ class UserController
         $validated['senha'] = Hash::make($validated['senha']);
 
         $user = User::create($validated);
+        $token = $user->createToken('app_token')->plainTextToken;
 
-        return response()->json($user->only(['id', 'nome', 'email']), 201);        
+        return response()->json(['user' => $user->only(['id', 'nome', 'email']),
+                                'token'=>$token], 201);        
     }
 
     /**
@@ -68,7 +80,7 @@ class UserController
      */
     public function show(User $user)
     {
-        return response()->json($user);        
+        return response()->json($user->only(['id', 'nome', 'email']));
     }
 
     /**

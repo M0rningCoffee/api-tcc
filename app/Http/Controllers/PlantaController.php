@@ -14,11 +14,10 @@ class PlantaController
      */
     public function index()
     {
-        
-
-        $plantas = Planta::with('solo')->get();
-        return response()->json($plantas);    
+        $plantas = Planta::with('solo')->where('owner', auth()->id())->get();
+        return response()->json($plantas);
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -32,11 +31,15 @@ class PlantaController
     public function storeLog(Request $request)
     {
         $validated = $request->validate([
-            'sensor_key' => 'required|string|exists:plantas,sensor_key', 
+            'sensor_key' => 'required|string', 
             'estado' => 'required|integer|min:0|max:100', 
         ]);
         
         $planta = Planta::where('sensor_key', $validated['sensor_key'])->first();
+        
+        if (! $planta) {
+        return response()->json(['error' => 'Sensor não autorizado'], 401);
+        }
 
         $log = Log::create([
             'plantas_id' => $planta->id,         
@@ -62,6 +65,8 @@ class PlantaController
             'umidade_minima' => 'nullable|integer|min:0|max:100',
         ]);  
         
+        $validated['owner'] = auth()->id();
+
         $planta = Planta::create($validated);
         
         return response()->json([
@@ -75,7 +80,8 @@ class PlantaController
      */
     public function show(Planta $planta)
     {
-        // $planta->load('solo'); 
+
+        abort_if($planta->owner !== auth()->id(), 403);
         $planta->load(['solo', 'logs' => function ($query) {
             $query->latest('created_at'); 
         }]);
@@ -84,24 +90,15 @@ class PlantaController
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function updatePlanta(Request $request, Planta $planta)
     {
-        abort_if($planta->user_id !== auth()->id(), 403, 'Acesso não autorizado a esta planta.');
+        abort_if($planta->owner !== auth()->id(), 403);
 
         $validated = $request->validate([
             'nome_planta' => 'sometimes|string|max:45',
             'sensor_key' => 'sometimes|string|unique:plantas,sensor_key,' . $planta->id, 
-            'solo_id' => 'sometimes|integer|exists:solos,id',
         ]);
         
         $planta->update($validated);
@@ -115,12 +112,14 @@ class PlantaController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroyPlanta(string $id)
+    public function destroyPlanta(Planta $planta)
     {
-        abort_if($planta->user_id !== auth()->id(), 403, 'Acesso não autorizado a esta planta.');
-
+        abort_if($planta->owner !== auth()->id(), 403);
         $planta->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+            'message' => 'Planta excluída com sucesso'
+        ], 200);
+
     }
 }

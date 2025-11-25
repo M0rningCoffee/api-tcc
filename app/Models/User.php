@@ -2,30 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Laravel\Sanctum\HasApiTokens;                       
+use Illuminate\Notifications\Notifiable;
 use App\Models\Planta;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class User extends Model
+class User extends Authenticatable
 {
-    protected $fillable = 
-    [
-        'nome','email','senha'
+    use HasApiTokens, Notifiable;
+
+    protected $fillable = [
+        'nome','email','senha',
     ];
 
     protected $hidden = [
-        'senha', 
+        'senha',
         'remember_token',
     ];
-    
 
     public function getAuthPassword()
     {
-        return $this->senha; 
+        return $this->senha;
     }
 
     public function plantas(): HasMany
     {
-        return $this->hasMany(Planta::class); 
+        return $this->hasMany(Planta::class);
     }
 }

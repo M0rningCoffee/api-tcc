@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('nome_planta', 255)->nullable();
             $table->integer('umidade')->nullable();
             $table->foreignId('solo_id')->constrained('solos')->onDelete('restrict');
-            // $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->after('id');
             $table->timestamps();
         });
     }

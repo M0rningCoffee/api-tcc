@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Planta extends Model
 {
     protected $fillable = [
-        'sensor_key','nome_planta', 'umidade', 'solo_id', 'umidade_minima'
+        'sensor_key','nome_planta', 'umidade', 'solo_id', 'umidade_minima', 'owner',
     ];
 
     public function solo(): BelongsTo
@@ -22,12 +22,12 @@ class Planta extends Model
 
     public function logs(): HasMany
     {
-        // return $this->hasMany(Log::class);
         return $this->hasMany(Log::class, 'plantas_id', 'id');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'owner', 'id');
     }
+
 }
