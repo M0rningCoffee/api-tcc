@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasApiTokens, Notifiable;
 
     protected $fillable = [
-        'nome','email','senha',
+        'nome','email','senha','fcm_token',
     ];
 
     protected $hidden = [

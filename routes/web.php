@@ -5,6 +5,7 @@ use App\Http\Controllers\PlantaController;
 use App\Http\Controllers\SoloController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\UserController;
+use App\Models\User;
 
 
     Route::post('/v1/login', [UserController::class, 'login'])->name('users.login');
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/v1/users/{user}', [UserController::class, 'show'])->name('users.show');
     Route::post('/v1/logout', [UserController::class, 'logout']);
+    Route::middleware('auth:sanctum')->post('/user/fcm-token', [UserController::class, 'updateFcmToken']);
 
     Route::get('/v1/me', function (Request $request) {
         return $request->user();
@@ -34,3 +36,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/logs', [LogController::class, 'index']);
 });
 
+Route::get('/v1/testar-push', function () {
+    $user = User::whereNotNull('fcm_token')->first();
+
+    if (!$user) {
+        return "Nenhum usuário com token encontrado no banco.";
+    }
+
+    $response = Http::post('https://exp.host/--/api/v2/push/send', [
+        'to' => $user->fcm_token,
+        'title' => 'Teste do TCC 🚀',
+        'body' => 'Se você está lendo isso, a banca vai te dar 10!',
+        'sound' => 'default',
+        'priority' => 'high',
+    ]);
+
+    return "Enviado para {$user->name}! Resposta da Expo: " . $response->body();
+});
+
+Route::get('/v1/debug-db', function () {
+    $total = User::count();
+    
+    $users = User::select('id', 'email', 'fcm_token')->get();
+
+    return response()->json([
+        'database_conectada' => DB::connection()->getDatabaseName(),
+        'total_usuarios' => $total,
+        'lista_usuarios' => $users
+    ]);
+});
